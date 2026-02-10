@@ -22,7 +22,8 @@ export async function GET() {
       Agent.countDocuments({}),
     ]);
 
-    const formatMatch = (m: Record<string, unknown>) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const formatMatch = (m: any) => ({
       matchId: m.matchId,
       phase: m.phase,
       agentAName: m.agentAName,

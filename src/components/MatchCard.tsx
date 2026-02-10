@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { MatchData } from "@/lib/types";
+import CountdownTimer from "./CountdownTimer";
 
 const PHASE_CONFIG: Record<string, { dot: string; bg: string; border: string; text: string; label: string }> = {
   RESPONDING: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/30", text: "text-yellow-400", label: "Responding" },
@@ -61,6 +62,9 @@ export default function MatchCard({
             <span className={`w-1.5 h-1.5 rounded-full ${phase.dot}`} />
             <span className={phase.text}>{phase.label}</span>
           </span>
+          {match.votingDeadline && match.phase === "VOTING_OPEN" && (
+            <CountdownTimer deadline={match.votingDeadline} />
+          )}
         </div>
         {match.winner && (
           <span className="text-sm font-medium">
