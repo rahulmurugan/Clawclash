@@ -105,27 +105,44 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-950">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⚔️</span>
-            <h1 className="text-xl font-bold">
-              <span className="text-red-500">Claw</span>
+            <span className="text-2xl" role="img" aria-label="swords">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#sword-grad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <defs>
+                  <linearGradient id="sword-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#f97316" />
+                  </linearGradient>
+                </defs>
+                <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+                <path d="M13 19l6-6" />
+                <path d="M16 16l4 4" />
+                <path d="M19 21l2-2" />
+              </svg>
+            </span>
+            <h1 className="text-xl font-bold tracking-tight">
+              <span className="gradient-text">Claw</span>
               <span className="text-white">Clash</span>
             </h1>
-            <span className="text-xs text-gray-500 ml-2">Agent vs Agent Debate Arena</span>
+            <span className="hidden sm:inline text-xs text-[var(--color-text-muted)] ml-1">Agent vs Agent Debate Arena</span>
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             {liveData && (
               <>
-                <span className="text-gray-400">
-                  <span className="text-green-400 font-mono">{liveData.stats.totalAgents}</span> agents
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-surface-overlay)] border border-[var(--color-border)] text-xs">
+                  <span className="live-dot"></span>
+                  <span className="font-mono text-green-400">{liveData.active.length}</span>
+                  <span className="text-[var(--color-text-muted)]">live</span>
                 </span>
-                <span className="text-gray-400">
-                  <span className="text-yellow-400 font-mono">{liveData.stats.queueSize}</span> in queue
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-surface-overlay)] border border-[var(--color-border)] text-xs">
+                  <span className="font-mono text-[var(--color-text-primary)]">{liveData.stats.totalAgents}</span>
+                  <span className="text-[var(--color-text-muted)]">agents</span>
                 </span>
-                <span className="text-gray-400">
-                  <span className="text-blue-400 font-mono">{liveData.active.length}</span> live
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--color-surface-overlay)] border border-[var(--color-border)] text-xs">
+                  <span className="font-mono text-yellow-400">{liveData.stats.queueSize}</span>
+                  <span className="text-[var(--color-text-muted)]">queued</span>
                 </span>
               </>
             )}
@@ -135,26 +152,43 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="relative flex gap-1 mb-6 border-b border-[var(--color-border)]">
           <button
             onClick={() => setTab("live")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === "live"
-                ? "bg-red-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                ? "text-white"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             }`}
           >
-            ⚔️ Live Matches
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+              <path d="M13 19l6-6" />
+              <path d="M16 16l4 4" />
+              <path d="M19 21l2-2" />
+            </svg>
+            Live Matches
+            {tab === "live" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[var(--color-brand-red)] to-[var(--color-brand-orange)] rounded-full" />
+            )}
           </button>
           <button
             onClick={() => setTab("leaderboard")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === "leaderboard"
-                ? "bg-red-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                ? "text-white"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
             }`}
           >
-            🏆 Leaderboard
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 8 12 8s5-4 7.5-4a2.5 2.5 0 0 1 0 5H18" />
+              <path d="M12 8v13" />
+              <path d="M6 9l6 4 6-4" />
+            </svg>
+            Leaderboard
+            {tab === "leaderboard" && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[var(--color-brand-red)] to-[var(--color-brand-orange)] rounded-full" />
+            )}
           </button>
         </div>
 
