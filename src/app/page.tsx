@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import MatchCard from "@/components/MatchCard";
-import type { MatchData, LeaderboardEntry, LiveData } from "@/lib/types";
+import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
+import { ToastContainer, showToast } from "@/components/Toast";
+import type { LeaderboardEntry, LiveData } from "@/lib/types";
 
 export default function Home() {
   const [liveData, setLiveData] = useState<LiveData | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tab, setTab] = useState<"live" | "leaderboard">("live");
   const [voting, setVoting] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const failCount = useRef(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -20,8 +25,16 @@ export default function Home() {
       const lb = await lbRes.json();
       setLiveData(live);
       setLeaderboard(lb.leaderboard || []);
+      failCount.current = 0;
+      setFetchError(false);
     } catch (e) {
       console.error("Fetch error:", e);
+      failCount.current++;
+      if (failCount.current >= 3) {
+        setFetchError(true);
+      }
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -35,19 +48,29 @@ export default function Home() {
     if (voting[matchId]) return;
     setVoting((v) => ({ ...v, [matchId]: true }));
     try {
-      await fetch("/api/votes/human", {
+      const res = await fetch("/api/votes/human", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ matchId, votedFor }),
       });
+      if (res.ok) {
+        showToast("Vote cast successfully!", "success");
+      } else {
+        showToast("Failed to cast vote", "error");
+        setVoting((v) => ({ ...v, [matchId]: false }));
+      }
       fetchData();
     } catch (e) {
       console.error("Vote error:", e);
+      showToast("Network error — try again", "error");
+      setVoting((v) => ({ ...v, [matchId]: false }));
     }
   }
 
   return (
     <div className="min-h-screen bg-[var(--color-surface)]">
+      <ToastContainer />
+
       {/* Header */}
       <header className="border-b border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
@@ -95,6 +118,19 @@ export default function Home() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Error Banner */}
+        {fetchError && (
+          <div className="mb-6 flex items-center justify-between px-4 py-3 rounded-lg border border-red-500/30 bg-red-500/10 text-sm text-red-400">
+            <span>Failed to load data. Check your connection.</span>
+            <button
+              onClick={() => { setFetchError(false); failCount.current = 0; fetchData(); }}
+              className="px-3 py-1 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-300 text-xs font-medium transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Tabs */}
         <div className="relative flex gap-1 mb-6 border-b border-[var(--color-border)]">
           <button
@@ -139,7 +175,13 @@ export default function Home() {
         {/* Live Matches */}
         {tab === "live" && (
           <div className="space-y-6">
-            {liveData?.active && liveData.active.length > 0 ? (
+            {loading ? (
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
+            ) : liveData?.active && liveData.active.length > 0 ? (
               liveData.active.map((match) => (
                 <MatchCard
                   key={match.matchId}
@@ -163,7 +205,7 @@ export default function Home() {
               </div>
             )}
 
-            {liveData?.recent && liveData.recent.length > 0 && (
+            {!loading && liveData?.recent && liveData.recent.length > 0 && (
               <>
                 <h2 className="text-lg font-semibold text-[var(--color-text-muted)] mt-8 mb-4">Recent Matches</h2>
                 {liveData.recent.map((match) => (
@@ -181,51 +223,55 @@ export default function Home() {
 
         {/* Leaderboard */}
         {tab === "leaderboard" && (
-          <div className="glass-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)]">
-                  <th className="px-4 py-3 text-left">#</th>
-                  <th className="px-4 py-3 text-left">Agent</th>
-                  <th className="px-4 py-3 text-left hidden md:table-cell">Description</th>
-                  <th className="px-4 py-3 text-right">Elo</th>
-                  <th className="px-4 py-3 text-right">W</th>
-                  <th className="px-4 py-3 text-right">L</th>
-                  <th className="px-4 py-3 text-right">D</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((agent) => (
-                  <tr key={agent.rank} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]/50 transition-colors">
-                    <td className="px-4 py-3 text-[var(--color-text-muted)] font-mono">
-                      {agent.rank <= 3 ? (
-                        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                          agent.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
-                          agent.rank === 2 ? "bg-gray-400/20 text-gray-300" :
-                          "bg-orange-500/20 text-orange-400"
-                        }`}>
-                          {agent.rank}
-                        </span>
-                      ) : agent.rank}
-                    </td>
-                    <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
-                    <td className="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-xs hidden md:table-cell">{agent.description}</td>
-                    <td className="px-4 py-3 text-right font-mono text-yellow-400">{agent.elo}</td>
-                    <td className="px-4 py-3 text-right font-mono text-green-400">{agent.wins}</td>
-                    <td className="px-4 py-3 text-right font-mono text-red-400">{agent.losses}</td>
-                    <td className="px-4 py-3 text-right font-mono text-[var(--color-text-muted)]">{agent.draws}</td>
+          loading ? (
+            <SkeletonTable />
+          ) : (
+            <div className="glass-card overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)]">
+                    <th className="px-4 py-3 text-left">#</th>
+                    <th className="px-4 py-3 text-left">Agent</th>
+                    <th className="px-4 py-3 text-left hidden md:table-cell">Description</th>
+                    <th className="px-4 py-3 text-right">Elo</th>
+                    <th className="px-4 py-3 text-right">W</th>
+                    <th className="px-4 py-3 text-right">L</th>
+                    <th className="px-4 py-3 text-right">D</th>
                   </tr>
-                ))}
-                {leaderboard.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)]">
-                      No agents registered yet
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {leaderboard.map((agent) => (
+                    <tr key={agent.rank} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]/50 transition-colors">
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] font-mono">
+                        {agent.rank <= 3 ? (
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                            agent.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
+                            agent.rank === 2 ? "bg-gray-400/20 text-gray-300" :
+                            "bg-orange-500/20 text-orange-400"
+                          }`}>
+                            {agent.rank}
+                          </span>
+                        ) : agent.rank}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
+                      <td className="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-xs hidden md:table-cell">{agent.description}</td>
+                      <td className="px-4 py-3 text-right font-mono text-yellow-400">{agent.elo}</td>
+                      <td className="px-4 py-3 text-right font-mono text-green-400">{agent.wins}</td>
+                      <td className="px-4 py-3 text-right font-mono text-red-400">{agent.losses}</td>
+                      <td className="px-4 py-3 text-right font-mono text-[var(--color-text-muted)]">{agent.draws}</td>
+                    </tr>
+                  ))}
+                  {leaderboard.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)]">
+                        No agents registered yet
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
 
         {/* Connect Your Agent */}
