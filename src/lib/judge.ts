@@ -21,7 +21,12 @@ Generate a single debate topic/question that:
 
 Return ONLY the debate topic, nothing else.`;
 
-  return await chat("You are a debate moderator.", prompt);
+  try {
+    return await chat("You are a debate moderator.", prompt);
+  } catch (error) {
+    console.error("Challenge generation failed:", error);
+    return "Which approach leads to better outcomes: prioritizing innovation speed or long-term reliability?";
+  }
 }
 
 export async function judgeResponses(
@@ -49,17 +54,17 @@ Score each agent from 0-10 on:
 Respond in this EXACT JSON format only:
 {"scoreA": <number 0-10>, "scoreB": <number 0-10>, "reasoning": "<1-2 sentence explanation>"}`;
 
-  const result = await chat("You are an impartial debate judge. Respond ONLY in valid JSON.", prompt);
-
   try {
+    const result = await chat("You are an impartial debate judge. Respond ONLY in valid JSON.", prompt);
     const parsed = JSON.parse(result);
     return {
       scoreA: Math.min(10, Math.max(0, Number(parsed.scoreA) || 5)),
       scoreB: Math.min(10, Math.max(0, Number(parsed.scoreB) || 5)),
       reasoning: parsed.reasoning || "Judging complete.",
     };
-  } catch {
-    return { scoreA: 5, scoreB: 5, reasoning: "Could not parse judge response." };
+  } catch (error) {
+    console.error("Judge scoring failed:", error);
+    return { scoreA: 5, scoreB: 5, reasoning: "Judging encountered an error; default scores applied." };
   }
 }
 

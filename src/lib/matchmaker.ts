@@ -34,10 +34,21 @@ export async function tryMatchmaking(
     bestMatch = candidates[0];
   }
 
+  // Atomic opponent selection: claim the opponent before proceeding
+  const claimed = await Agent.findOneAndUpdate(
+    { _id: bestMatch._id, inQueue: true, inMatch: null },
+    { inQueue: false },
+    { new: true }
+  );
+
+  if (!claimed) {
+    // Opponent was already claimed by another matchmaking request
+    return null;
+  }
+
   // Create the match
   const matchId = uuidv4().slice(0, 8);
 
-  // Generate challenge based on both agent descriptions
   const challenge = await generateChallenge(
     joiningAgent.name,
     joiningAgent.description,
@@ -55,14 +66,14 @@ export async function tryMatchmaking(
     challenge,
   });
 
-  // Update both agents
+  // Update both agents with match ID
   await Agent.updateOne(
     { _id: joiningAgent._id },
     { inQueue: false, inMatch: match.matchId }
   );
   await Agent.updateOne(
     { _id: bestMatch._id },
-    { inQueue: false, inMatch: match.matchId }
+    { inMatch: match.matchId }
   );
 
   return match.matchId;

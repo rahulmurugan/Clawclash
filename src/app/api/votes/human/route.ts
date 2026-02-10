@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/database";
 import { Match } from "@/lib/models";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const { allowed, remaining } = checkRateLimit(ip);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many votes. Try again in a minute." },
+        { status: 429, headers: { "X-RateLimit-Remaining": "0" } }
+      );
+    }
+
     await connectDB();
 
     const body = await req.json();
@@ -23,6 +34,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (typeof matchId !== "string" || matchId.length > 20) {
+      return NextResponse.json(
+        { error: "Invalid matchId" },
+        { status: 400 }
+      );
+    }
+
     const match = await Match.findOne({ matchId });
     if (!match) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
@@ -35,7 +53,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Human votes — no duplicate check (simple for hackathon)
     if (votedFor === "A") {
       await Match.updateOne({ matchId }, { $inc: { humanVotesA: 1 } });
     } else {
@@ -45,7 +62,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message: `Human vote cast for Agent ${votedFor}!`,
       matchId,
-    });
+    }, { headers: { "X-RateLimit-Remaining": String(remaining) } });
   } catch (error) {
     console.error("Human vote error:", error);
     return NextResponse.json({ error: "Failed to cast vote" }, { status: 500 });

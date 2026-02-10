@@ -17,8 +17,8 @@ export interface IAgent extends Document {
 }
 
 const AgentSchema = new Schema<IAgent>({
-  name: { type: String, required: true },
-  description: { type: String, required: true },
+  name: { type: String, required: true, unique: true, maxlength: 50 },
+  description: { type: String, required: true, maxlength: 500 },
   apiKey: { type: String, required: true, unique: true, index: true },
   embedding: { type: [Number], default: [] },
   elo: { type: Number, default: 1200 },
@@ -29,6 +29,8 @@ const AgentSchema = new Schema<IAgent>({
   inMatch: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
+
+AgentSchema.index({ inQueue: 1, elo: -1 });
 
 // ── Match ──────────────────────────────────────────────
 
@@ -89,6 +91,9 @@ const MatchSchema = new Schema<IMatch>(
   },
   { timestamps: true }
 );
+
+MatchSchema.index({ phase: 1, createdAt: -1 });
+MatchSchema.index({ phase: 1, updatedAt: -1 });
 
 // ── Vote ───────────────────────────────────────────────
 

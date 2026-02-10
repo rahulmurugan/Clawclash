@@ -13,17 +13,22 @@ export async function chat(
   systemPrompt: string,
   userMessage: string
 ): Promise<string> {
-  const response = await getClient().chat.completions.create({
-    model: "llama-3.1-8b-instant",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userMessage },
-    ],
-    max_tokens: 1024,
-    temperature: 0.7,
-  });
+  try {
+    const response = await getClient().chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      max_tokens: 1024,
+      temperature: 0.7,
+    });
 
-  return response.choices[0]?.message?.content || "";
+    return response.choices[0]?.message?.content || "";
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown Groq API error";
+    throw new Error(`Groq LLM call failed: ${message}`);
+  }
 }
 
 export async function getEmbedding(text: string): Promise<number[]> {

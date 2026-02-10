@@ -27,6 +27,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (response.length > 2000) {
+      return NextResponse.json(
+        { error: "Response must be 2000 characters or fewer" },
+        { status: 400 }
+      );
+    }
+
     const match = await Match.findOne({ matchId: agent.inMatch });
     if (!match) {
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
