@@ -132,10 +132,10 @@ export default function Home() {
         )}
 
         {/* Tabs */}
-        <div className="relative flex gap-1 mb-6 border-b border-[var(--color-border)]">
+        <div className="relative flex mb-6 border-b border-[var(--color-border)]">
           <button
             onClick={() => setTab("live")}
-            className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`relative flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === "live"
                 ? "text-white"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
@@ -154,7 +154,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setTab("leaderboard")}
-            className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`relative flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 px-4 py-3 text-sm font-medium transition-colors ${
               tab === "leaderboard"
                 ? "text-white"
                 : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
@@ -226,51 +226,91 @@ export default function Home() {
           loading ? (
             <SkeletonTable />
           ) : (
-            <div className="glass-card overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)]">
-                    <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-4 py-3 text-left">Agent</th>
-                    <th className="px-4 py-3 text-left hidden md:table-cell">Description</th>
-                    <th className="px-4 py-3 text-right">Elo</th>
-                    <th className="px-4 py-3 text-right">W</th>
-                    <th className="px-4 py-3 text-right">L</th>
-                    <th className="px-4 py-3 text-right">D</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.map((agent) => (
-                    <tr key={agent.rank} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]/50 transition-colors">
-                      <td className="px-4 py-3 text-[var(--color-text-muted)] font-mono">
-                        {agent.rank <= 3 ? (
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                            agent.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
-                            agent.rank === 2 ? "bg-gray-400/20 text-gray-300" :
-                            "bg-orange-500/20 text-orange-400"
-                          }`}>
-                            {agent.rank}
-                          </span>
-                        ) : agent.rank}
-                      </td>
-                      <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
-                      <td className="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-xs hidden md:table-cell">{agent.description}</td>
-                      <td className="px-4 py-3 text-right font-mono text-yellow-400">{agent.elo}</td>
-                      <td className="px-4 py-3 text-right font-mono text-green-400">{agent.wins}</td>
-                      <td className="px-4 py-3 text-right font-mono text-red-400">{agent.losses}</td>
-                      <td className="px-4 py-3 text-right font-mono text-[var(--color-text-muted)]">{agent.draws}</td>
+            <>
+              {/* Desktop table */}
+              <div className="hidden sm:block glass-card overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-[var(--color-border)] text-[var(--color-text-muted)]">
+                      <th className="px-4 py-3 text-left">#</th>
+                      <th className="px-4 py-3 text-left">Agent</th>
+                      <th className="px-4 py-3 text-left hidden md:table-cell">Description</th>
+                      <th className="px-4 py-3 text-right">Elo</th>
+                      <th className="px-4 py-3 text-right">W</th>
+                      <th className="px-4 py-3 text-right">L</th>
+                      <th className="px-4 py-3 text-right">D</th>
                     </tr>
-                  ))}
-                  {leaderboard.length === 0 && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)]">
-                        No agents registered yet
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {leaderboard.map((agent) => (
+                      <tr key={agent.rank} className="border-b border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-overlay)]/50 transition-colors">
+                        <td className="px-4 py-3 text-[var(--color-text-muted)] font-mono">
+                          {agent.rank <= 3 ? (
+                            <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                              agent.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
+                              agent.rank === 2 ? "bg-gray-400/20 text-gray-300" :
+                              "bg-orange-500/20 text-orange-400"
+                            }`}>
+                              {agent.rank}
+                            </span>
+                          ) : agent.rank}
+                        </td>
+                        <td className="px-4 py-3 font-medium text-white">{agent.name}</td>
+                        <td className="px-4 py-3 text-[var(--color-text-muted)] truncate max-w-xs hidden md:table-cell">{agent.description}</td>
+                        <td className="px-4 py-3 text-right font-mono text-yellow-400">{agent.elo}</td>
+                        <td className="px-4 py-3 text-right font-mono text-green-400">{agent.wins}</td>
+                        <td className="px-4 py-3 text-right font-mono text-red-400">{agent.losses}</td>
+                        <td className="px-4 py-3 text-right font-mono text-[var(--color-text-muted)]">{agent.draws}</td>
+                      </tr>
+                    ))}
+                    {leaderboard.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-12 text-center text-[var(--color-text-muted)]">
+                          No agents registered yet
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile card view */}
+              <div className="sm:hidden space-y-3">
+                {leaderboard.length === 0 ? (
+                  <div className="glass-card p-8 text-center text-[var(--color-text-muted)]">
+                    No agents registered yet
+                  </div>
+                ) : (
+                  leaderboard.map((agent) => (
+                    <div key={agent.rank} className="glass-card p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {agent.rank <= 3 ? (
+                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${
+                              agent.rank === 1 ? "bg-yellow-500/20 text-yellow-400" :
+                              agent.rank === 2 ? "bg-gray-400/20 text-gray-300" :
+                              "bg-orange-500/20 text-orange-400"
+                            }`}>
+                              {agent.rank}
+                            </span>
+                          ) : (
+                            <span className="w-7 h-7 flex items-center justify-center text-xs font-mono text-[var(--color-text-muted)]">{agent.rank}</span>
+                          )}
+                          <span className="font-medium text-white">{agent.name}</span>
+                        </div>
+                        <span className="font-mono text-yellow-400 font-bold">{agent.elo}</span>
+                      </div>
+                      <p className="text-xs text-[var(--color-text-muted)] mb-2 line-clamp-1">{agent.description}</p>
+                      <div className="flex gap-4 text-xs font-mono">
+                        <span className="text-green-400">{agent.wins}W</span>
+                        <span className="text-red-400">{agent.losses}L</span>
+                        <span className="text-[var(--color-text-muted)]">{agent.draws}D</span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
           )
         )}
 
