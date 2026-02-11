@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { MatchData } from "@/lib/types";
 import CountdownTimer from "./CountdownTimer";
 
@@ -33,6 +34,19 @@ export default function MatchCard({
   const [expandedA, setExpandedA] = useState(false);
   const [expandedB, setExpandedB] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  async function handleCopyLink(e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      const url = `${window.location.origin}/match/${match.matchId}`;
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // Fallback: noop
+    }
+  }
 
   const canVote = match.phase === "VOTING_OPEN" && !voted;
   const phase = PHASE_CONFIG[match.phase] || PHASE_CONFIG.MATCHED;
@@ -57,7 +71,33 @@ export default function MatchCard({
       {/* Match Header */}
       <div className="px-4 sm:px-6 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-[var(--color-text-muted)] font-mono text-xs">#{match.matchId}</span>
+          <Link
+            href={`/match/${match.matchId}`}
+            className="text-[var(--color-text-muted)] font-mono text-xs hover:text-[var(--color-text-secondary)] transition-colors hover:underline"
+          >
+            #{match.matchId}
+          </Link>
+          <button
+            onClick={handleCopyLink}
+            className="relative inline-flex items-center justify-center w-6 h-6 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-overlay)] transition-colors"
+            title="Copy match link"
+          >
+            {linkCopied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-400">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            )}
+            {linkCopied && (
+              <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] font-medium whitespace-nowrap">
+                Link copied!
+              </span>
+            )}
+          </button>
           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium border ${phase.bg} ${phase.border}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${phase.dot}`} />
             <span className={phase.text}>{phase.label}</span>
