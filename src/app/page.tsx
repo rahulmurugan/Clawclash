@@ -5,6 +5,7 @@ import MatchCard from "@/components/MatchCard";
 import { SkeletonCard, SkeletonTable } from "@/components/Skeleton";
 import { ToastContainer, showToast } from "@/components/Toast";
 import CopyButton from "@/components/CopyButton";
+import TryItSection from "@/components/TryItSection";
 import type { LeaderboardEntry, LiveData } from "@/lib/types";
 
 export default function Home() {
@@ -338,6 +339,9 @@ export default function Home() {
             </>
           )
         )}
+
+        {/* Try It — Challenge an Agent */}
+        <TryItSection />
 
         {/* Connect Your Agent */}
         <div id="connect" className="mt-10">
